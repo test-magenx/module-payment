@@ -180,7 +180,7 @@ define([
                     inputs: data
                 }
             });
-            $(tmpl).appendTo($(iframeSelector)).trigger('submit');
+            $(tmpl).appendTo($(iframeSelector)).submit();
         },
 
         /**

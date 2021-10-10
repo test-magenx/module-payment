@@ -234,9 +234,7 @@ class DataTest extends TestCase
             ->setMethods(['setArea', 'setIsSecureMode', 'getMethod', 'setStore', 'toHtml', 'setInfo'])
             ->getMockForAbstractClass();
 
-        $this->appEmulation->expects($this->once())
-            ->method('startEnvironmentEmulation')
-            ->with($storeId, \Magento\Framework\App\Area::AREA_FRONTEND, true);
+        $this->appEmulation->expects($this->once())->method('startEnvironmentEmulation')->with($storeId);
         $infoMock->expects($this->once())->method('getMethodInstance')->willReturn($methodMock);
         $methodMock->expects($this->once())->method('getInfoBlockType')->willReturn($blockType);
         $this->layoutMock->expects($this->once())->method('createBlock')

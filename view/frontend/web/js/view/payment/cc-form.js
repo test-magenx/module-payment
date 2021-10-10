@@ -193,14 +193,6 @@ define([
         },
 
         /**
-         * Get unsanitized html for image for CVV
-         * @returns {String}
-         */
-        getCvvImageUnsanitizedHtml: function () {
-            return this.getCvvImageHtml();
-        },
-
-        /**
          * @deprecated
          * @returns {Object}
          */
