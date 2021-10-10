@@ -16,9 +16,7 @@ use PHPUnit\Framework\TestCase;
 
 class CountryValidatorTest extends TestCase
 {
-    /**
-     * @var CountryValidator
-     */
+    /** @var CountryValidator */
     protected $model;
 
     /**
@@ -36,15 +34,13 @@ class CountryValidatorTest extends TestCase
      */
     protected $resultMock;
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp(): void
     {
         $this->configMock = $this->getMockBuilder(ConfigInterface::class)
             ->getMockForAbstractClass();
-        $this->resultFactoryMock = $this->getMockBuilder(ResultInterfaceFactory::class)
-            ->onlyMethods(['create'])
+        $this->resultFactoryMock = $this->getMockBuilder(
+            ResultInterfaceFactory::class
+        )->setMethods(['create'])
             ->disableOriginalConstructor()
             ->getMock();
         $this->resultMock = $this->getMockBuilder(Result::class)
@@ -58,28 +54,20 @@ class CountryValidatorTest extends TestCase
     }
 
     /**
-     * @param $storeId
-     * @param $country
-     * @param $allowspecific
-     * @param $specificcountry
-     * @param $isValid
-     *
-     * @return void
      * @dataProvider validateAllowspecificTrueDataProvider
      */
-    public function testValidateAllowspecificTrue(
-        $storeId,
-        $country,
-        $allowspecific,
-        $specificcountry,
-        $isValid
-    ): void {
+    public function testValidateAllowspecificTrue($storeId, $country, $allowspecific, $specificcountry, $isValid)
+    {
         $validationSubject = ['storeId' => $storeId, 'country' => $country];
 
-        $this->configMock
+        $this->configMock->expects($this->at(0))
             ->method('getValue')
-            ->withConsecutive(['allowspecific', $storeId], ['specificcountry', $storeId])
-            ->willReturnOnConsecutiveCalls($allowspecific, $specificcountry);
+            ->with('allowspecific', $storeId)
+            ->willReturn($allowspecific);
+        $this->configMock->expects($this->at(1))
+            ->method('getValue')
+            ->with('specificcountry', $storeId)
+            ->willReturn($specificcountry);
 
         $this->resultFactoryMock->expects($this->once())
             ->method('create')
@@ -92,7 +80,7 @@ class CountryValidatorTest extends TestCase
     /**
      * @return array
      */
-    public function validateAllowspecificTrueDataProvider(): array
+    public function validateAllowspecificTrueDataProvider()
     {
         return [
             [1, 'US', 1, 'US,UK,CA', true], //$storeId, $country, $allowspecific, $specificcountry, $isValid
@@ -103,11 +91,11 @@ class CountryValidatorTest extends TestCase
     /**
      * @dataProvider validateAllowspecificFalseDataProvider
      */
-    public function testValidateAllowspecificFalse($storeId, $allowspecific, $isValid): void
+    public function testValidateAllowspecificFalse($storeId, $allowspecific, $isValid)
     {
         $validationSubject = ['storeId' => $storeId];
 
-        $this->configMock
+        $this->configMock->expects($this->at(0))
             ->method('getValue')
             ->with('allowspecific', $storeId)
             ->willReturn($allowspecific);
@@ -123,7 +111,7 @@ class CountryValidatorTest extends TestCase
     /**
      * @return array
      */
-    public function validateAllowspecificFalseDataProvider(): array
+    public function validateAllowspecificFalseDataProvider()
     {
         return [
             [1, 0, true] //$storeId, $allowspecific, $isValid

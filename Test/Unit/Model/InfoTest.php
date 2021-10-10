@@ -15,6 +15,7 @@ use Magento\Framework\TestFramework\Unit\Helper\ObjectManager as ObjectManagerHe
 use Magento\Payment\Helper\Data;
 use Magento\Payment\Model\Info;
 use Magento\Payment\Model\InfoInterface;
+use Magento\Payment\Model\Method;
 use Magento\Payment\Model\Method\Substitution;
 use Magento\Payment\Model\MethodInterface;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -25,44 +26,27 @@ use PHPUnit\Framework\TestCase;
  */
 class InfoTest extends TestCase
 {
-    /**
-     * @var InfoInterface
-     */
+    /** @var InfoInterface */
     protected $info;
 
-    /**
-     * @var ObjectManagerHelper
-     */
+    /** @var ObjectManagerHelper */
     protected $objectManagerHelper;
 
-    /**
-     * @var Context|MockObject
-     */
+    /** @var Context|MockObject */
     protected $contextMock;
 
-    /**
-     * @var Registry|MockObject
-     */
+    /** @var Registry|MockObject */
     protected $registryMock;
 
-    /**
-     * @var Data|MockObject
-     */
+    /** @var Data|MockObject */
     protected $paymentHelperMock;
 
-    /**
-     * @var EncryptorInterface|MockObject
-     */
+    /** @var EncryptorInterface|MockObject */
     protected $encryptorInterfaceMock;
 
-    /**
-     * @var Data|MockObject
-     */
+    /** @var Data|MockObject */
     protected $methodInstanceMock;
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp(): void
     {
         $this->contextMock = $this->createMock(Context::class);
@@ -88,10 +72,8 @@ class InfoTest extends TestCase
      * @dataProvider ccKeysDataProvider
      * @param string $keyCc
      * @param string $keyCcEnc
-     *
-     * @return void
      */
-    public function testGetDataCcNumber(string $keyCc, string $keyCcEnc): void
+    public function testGetDataCcNumber($keyCc, $keyCcEnc)
     {
         // no data was set
         $this->assertNull($this->info->getData($keyCc));
@@ -109,7 +91,7 @@ class InfoTest extends TestCase
      *
      * @return array
      */
-    public function ccKeysDataProvider(): array
+    public function ccKeysDataProvider()
     {
         return [
             ['cc_number', 'cc_number_enc'],
@@ -117,10 +99,7 @@ class InfoTest extends TestCase
         ];
     }
 
-    /**
-     * @return void
-     */
-    public function testGetMethodInstanceWithRealMethod(): void
+    public function testGetMethodInstanceWithRealMethod()
     {
         $method = 'real_method';
         $this->info->setData('method', $method);
@@ -137,30 +116,29 @@ class InfoTest extends TestCase
         $this->info->getMethodInstance();
     }
 
-    /**
-     * @return void
-     */
-    public function testGetMethodInstanceWithUnrealMethod(): void
+    public function testGetMethodInstanceWithUnrealMethod()
     {
         $method = 'unreal_method';
         $this->info->setData('method', $method);
+
+        $this->paymentHelperMock->expects($this->at(0))
+            ->method('getMethodInstance')
+            ->with($method)
+            ->willThrowException(new \UnexpectedValueException());
 
         $this->methodInstanceMock->expects($this->once())
             ->method('setInfoInstance')
             ->with($this->info);
 
-        $this->paymentHelperMock
+        $this->paymentHelperMock->expects($this->at(1))
             ->method('getMethodInstance')
-            ->withConsecutive([$method], [Substitution::CODE])
+            ->with(Substitution::CODE)
             ->willReturn($this->methodInstanceMock);
 
         $this->info->getMethodInstance();
     }
 
-    /**
-     * @return void
-     */
-    public function testGetMethodInstanceWithNoMethod(): void
+    public function testGetMethodInstanceWithNoMethod()
     {
         $this->expectException(LocalizedException::class);
         $this->expectExceptionMessage('The payment method you requested is not available.');
@@ -168,10 +146,7 @@ class InfoTest extends TestCase
         $this->info->getMethodInstance();
     }
 
-    /**
-     * @return void
-     */
-    public function testGetMethodInstanceRequestedMethod(): void
+    public function testGetMethodInstanceRequestedMethod()
     {
         $code = 'real_method';
         $this->info->setData('method', $code);
@@ -187,10 +162,7 @@ class InfoTest extends TestCase
         $this->assertSame($this->methodInstanceMock, $this->info->getMethodInstance());
     }
 
-    /**
-     * @return void
-     */
-    public function testEncrypt(): void
+    public function testEncrypt()
     {
         $data = 'data';
         $encryptedData = 'd1a2t3a4';
@@ -201,10 +173,7 @@ class InfoTest extends TestCase
         $this->assertEquals($encryptedData, $this->info->encrypt($data));
     }
 
-    /**
-     * @return void
-     */
-    public function testDecrypt(): void
+    public function testDecrypt()
     {
         $data = 'data';
         $encryptedData = 'd1a2t3a4';
@@ -215,10 +184,7 @@ class InfoTest extends TestCase
         $this->assertEquals($data, $this->info->decrypt($encryptedData));
     }
 
-    /**
-     * @return void
-     */
-    public function testSetAdditionalInformationException(): void
+    public function testSetAdditionalInformationException()
     {
         $this->expectException(LocalizedException::class);
         $this->info->setAdditionalInformation('object', new \StdClass());
@@ -228,10 +194,8 @@ class InfoTest extends TestCase
      * @dataProvider additionalInformationDataProvider
      * @param mixed $key
      * @param mixed $value
-     *
-     * @return void
      */
-    public function testSetAdditionalInformationMultipleTypes($key, $value = null): void
+    public function testSetAdditionalInformationMultipleTypes($key, $value = null)
     {
         $this->info->setAdditionalInformation($key, $value);
         $this->assertEquals($value ? [$key => $value] : $key, $this->info->getAdditionalInformation());
@@ -242,7 +206,7 @@ class InfoTest extends TestCase
      *
      * @return array
      */
-    public function additionalInformationDataProvider(): array
+    public function additionalInformationDataProvider()
     {
         return [
             [['key1' => 'data1', 'key2' => 'data2'], null],
@@ -250,10 +214,7 @@ class InfoTest extends TestCase
         ];
     }
 
-    /**
-     * @return void
-     */
-    public function testGetAdditionalInformationByKey(): void
+    public function testGetAdditionalInformationByKey()
     {
         $key = 'key';
         $value = 'value';
@@ -261,10 +222,7 @@ class InfoTest extends TestCase
         $this->assertEquals($value, $this->info->getAdditionalInformation($key));
     }
 
-    /**
-     * @return void
-     */
-    public function testUnsAdditionalInformation(): void
+    public function testUnsAdditionalInformation()
     {
         // set array to additional
         $data = ['key1' => 'data1', 'key2' => 'data2'];
@@ -280,10 +238,7 @@ class InfoTest extends TestCase
         $this->assertEmpty($this->info->unsAdditionalInformation()->getAdditionalInformation());
     }
 
-    /**
-     * @return void
-     */
-    public function testHasAdditionalInformation(): void
+    public function testHasAdditionalInformation()
     {
         $this->assertFalse($this->info->hasAdditionalInformation());
 
@@ -295,10 +250,7 @@ class InfoTest extends TestCase
         $this->assertTrue($this->info->hasAdditionalInformation());
     }
 
-    /**
-     * @return void
-     */
-    public function testInitAdditionalInformationWithUnserialize(): void
+    public function testInitAdditionalInformationWithUnserialize()
     {
         $data = ['key1' => 'data1', 'key2' => 'data2'];
         $this->info->setData('additional_information', $data);

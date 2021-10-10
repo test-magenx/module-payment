@@ -27,24 +27,15 @@ use Psr\Log\LoggerInterface;
  */
 class FreeTest extends TestCase
 {
-    /**
-     * @var Free
-     */
+    /** @var Free */
     protected $methodFree;
 
-    /**
-     * @var MockObject
-     */
+    /**  @var MockObject */
     protected $scopeConfig;
 
-    /**
-     * @var MockObject
-     */
+    /**  @var MockObject */
     protected $currencyPrice;
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp(): void
     {
         $paymentData  = $this->createMock(Data::class);
@@ -80,17 +71,18 @@ class FreeTest extends TestCase
      * @param string $orderStatus
      * @param string $paymentAction
      * @param mixed $result
-     *
-     * @return void
      * @dataProvider getConfigPaymentActionProvider
      */
-    public function testGetConfigPaymentAction($orderStatus, $paymentAction, $result): void
+    public function testGetConfigPaymentAction($orderStatus, $paymentAction, $result)
     {
+        $this->scopeConfig->expects($this->at(0))
+            ->method('getValue')
+            ->willReturn($orderStatus);
 
         if ($orderStatus != 'pending') {
-            $this->scopeConfig
+            $this->scopeConfig->expects($this->at(1))
                 ->method('getValue')
-                ->willReturnOnConsecutiveCalls($orderStatus, $paymentAction);
+                ->willReturn($paymentAction);
         }
         $this->assertEquals($result, $this->methodFree->getConfigPaymentAction());
     }
@@ -100,16 +92,10 @@ class FreeTest extends TestCase
      * @param bool $isActive
      * @param bool $notEmptyQuote
      * @param bool $result
-     *
-     * @return void
      * @dataProvider getIsAvailableProvider
      */
-    public function testIsAvailable(
-        float $grandTotal,
-        bool $isActive,
-        bool $notEmptyQuote,
-        bool $result
-    ): void {
+    public function testIsAvailable($grandTotal, $isActive, $notEmptyQuote, $result)
+    {
         $quote = null;
         if ($notEmptyQuote) {
             $quote = $this->createMock(Quote::class);
@@ -133,7 +119,7 @@ class FreeTest extends TestCase
     /**
      * @return array
      */
-    public function getIsAvailableProvider(): array
+    public function getIsAvailableProvider()
     {
         return [
             [0, true, true, true],
@@ -147,7 +133,7 @@ class FreeTest extends TestCase
     /**
      * @return array
      */
-    public function getConfigPaymentActionProvider(): array
+    public function getConfigPaymentActionProvider()
     {
         return [
             ['pending', 'action', null],
